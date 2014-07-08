@@ -1,0 +1,17 @@
+{
+  "name": "myexpress",
+  "version": "0.0.0",
+  "description": "This is a demo to follow express framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "likelight",
+  "devDependencies":{
+	"mocha":"^1.18.2",
+	"chai":"^1.9.1",
+	"supertest":"^0.10.0"
+
+  },
+  "license": "MIT"
+}
