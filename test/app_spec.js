@@ -136,7 +136,7 @@ describe("app",function(){
 			}
 
 			var e1 = function (err, req, res, next) {
-				//res.end('m1');
+				res.end('m1');
 			}
 
 			var m2 = function (req, res,next) {
