@@ -17,18 +17,18 @@ module.exports = function(){
 			res.statusCode = 404;
 			res.end("Not found");
 		}else{
-			for(var i = 0 ; i < stack.length; i++){
-				console.log(stack[i].path);
-			}	
+			//获得访问路径
 			var url = req.url;
 			var next = function(err){
-			
 				var middleware_layer = stack[index];
 				var match_result = middleware_layer.match(url);
-		
+				req.params = {};
 				if(match_result){
 					// 如果匹配路径则执行对应操作
 					middleware = middleware_layer.handle;
+					//获取详细参数
+					req.params = match_result.params;
+
 					if(typeof(middleware) == 'undefined'){
 						if(err){
 							res.statusCode = 500;
@@ -39,10 +39,17 @@ module.exports = function(){
 						}
 						return;
 					}else{
+						if(typeof middleware.handle === "function"){
+							req.old_url = req.url;
+							var path = middleware_layer.path;
+							req.url = req.url.replace(path,"");
+							console.log("req is "+req.url);
+						}else{
+							req.url = match_result["path"];
+						}
 						var arg_length = middleware.length;
 						index ++;
 						try{
-							console.log("2");
 							if(err){
 							// if quified the format 
 								if(arg_length == 4){
@@ -61,18 +68,18 @@ module.exports = function(){
 								}
 							}
 						}catch(err){
-								res.statusCode = 500;
-								res.end();
+							res.statusCode = 500;
+							res.end();
 						}
 					}
 				}else{
 					//否则 next
 					index++;
 					next();
-				}									
-				
-			};
-			next();
+				}
+
+		   };
+		   next();
 		}
 
 	};
