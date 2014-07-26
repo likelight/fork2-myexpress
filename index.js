@@ -1,5 +1,7 @@
 var http = require("http");
 var Layer = require("./lib/layer.js");
+var makeRoute = require("./lib/route");
+var methods = require("methods");
 
 module.exports = function() {
 
@@ -116,6 +118,27 @@ module.exports = function() {
         this.stack.push(layer);
         return app;
     };
+
+    //app.get method
+    app.get = function(path,middleware){  	
+  		var handle = middleware;
+  		var fn = makeRoute('GET',handle);
+    	var layer = new Layer(path,fn,true);
+    	this.stack.push(layer);
+    	return app;
+    };
+
+    //定义各种verb处理函数
+    methods.forEach(function(method){
+    	app[method] = function(path,middleware){
+    		var fn = makeRoute(method.toUpperCase(),middleware);
+    		var layer = new Layer(path,fn,true);
+    		this.stack.push(layer);
+    		return app;
+    	};
+    });
+
+    //
 
     return app;
 }

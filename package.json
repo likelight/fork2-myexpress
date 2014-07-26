@@ -7,11 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "likelight",
-  "devDependencies":{
-	"mocha":"^1.18.2",
-	"chai":"^1.9.1",
-	"supertest":"^0.10.0"
-
+  "devDependencies": {
+    "mocha": "^1.18.2",
+    "chai": "^1.9.1",
+    "supertest": "^0.10.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "methods": "^0.1.0"
+  }
 }
