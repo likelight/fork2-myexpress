@@ -128,17 +128,37 @@ module.exports = function() {
     	return app;
     };
 
+    //app.route
+    app.route = function(path){
+    	var fn = makeRoute();
+    	if(path){
+    		path = path;	
+    	}else{
+    		path = '/';
+    	}
+    	
+    	var layer = new Layer(path,fn,true);
+    	this.stack.push(layer);
+    	return fn; // for chain
+    };
+
     //定义各种verb处理函数
     methods.forEach(function(method){
     	app[method] = function(path,middleware){
-    		var fn = makeRoute(method.toUpperCase(),middleware);
-    		var layer = new Layer(path,fn,true);
-    		this.stack.push(layer);
+    		var route = app.route(path);
+    		route[method](middleware);
     		return app;
     	};
     });
 
-    //
+    //定义app.all方法
+    app.all = function(path,middleware){
+    	var route = app.route(path);
+    	route["all"](middleware);
+    	return app;
+    }
+
+    //处理all
 
     return app;
 }
