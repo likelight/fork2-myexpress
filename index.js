@@ -1,6 +1,7 @@
 var http = require("http");
 var Layer = require("./lib/layer.js");
 var makeRoute = require("./lib/route");
+var createInjector = require("./lib/injector");
 var methods = require("methods");
 
 module.exports = function() {
@@ -12,6 +13,7 @@ module.exports = function() {
     }
     //用于存储app.use记录的中间件
     app.stack = [];
+    app._factories = {};
     //handle method to deal with the real request
     app.handle = function(req, res, outnext) {
         var stack_index = 0; //stack的索引
@@ -101,7 +103,6 @@ module.exports = function() {
         next();
     };
 
-
     //add listen function to listen port
     app.listen = function(port, done) {
         var server = http.createServer(app);
@@ -156,6 +157,23 @@ module.exports = function() {
     	var route = app.route(path);
     	route["all"](middleware);
     	return app;
+    }
+
+    //定义app.factory
+    app.factory = function(name,fn){
+    	if('function' === typeof fn){
+    		this._factories[name] = fn;
+
+    	}else{
+            throw new Error();
+        }
+        //console.log(app._factories);
+    };
+
+
+    app.inject = function(handle){
+        var injector = createInjector(handle,app);
+        return injector;
     }
 
     //处理all
