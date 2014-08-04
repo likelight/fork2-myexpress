@@ -2,14 +2,18 @@ var http = require("http");
 var Layer = require("./lib/layer.js");
 var makeRoute = require("./lib/route");
 var createInjector = require("./lib/injector");
+var reqDeal = require("./lib/reqest");
+var resDeal = require("./lib/response");
 var methods = require("methods");
 
 module.exports = function() {
 
     //add an app to deal with request
     var app = function(req, res, next) {
+        app.monkey_patch(req,res);
+        console.log("app");
         req.app = app;
-        return app.handle(req, res, next);
+        app.handle(req, res, next);
     }
     //用于存储app.use记录的中间件
     app.stack = [];
@@ -22,6 +26,8 @@ module.exports = function() {
         req.params = [];
         var old_url = req.url; //记录初次访问路径，以供访问路径在经过subapp时候的修改还原
         var url_modified_status = 0; // url修改标志符 0：未修改；1：已修改
+        var restoreApp = null;
+        console.log("handle");
         //获得访问路径			
         var next = function(err) {
             var middleware_layer = stack[stack_index++];
@@ -31,17 +37,30 @@ module.exports = function() {
                 req.url = old_url;
             }
 
+            console.log(app.stack);
+            console.log("first is "+restoreApp);
+            if(restoreApp){
+                res.app = restoreApp;
+                restoreApp = null;
+            }
+            console.log("two is "+restoreApp);
+
             if (middleware_layer) {
                 var result = middleware_layer.match(req.url);
                 if (result) {
                     req.params = result.params;
                     var middleware = middleware_layer.handle;
+                    console.log("match");
                 } else {
                     req.params = {};
                     return next(err);
+                    console.log("not  match");
                 }
                 //含有subapp的情况
                 if (typeof middleware.handle == 'function') {
+                	console.log("subapp");
+                    restoreApp = req.app;
+                    req.app = middleware_layer.handle;
                     var remote = middleware_layer.path;
                     //含有subapp时需要对路径进行截取，去除前端路径
                     req.url = req.url.replace(remote, "");
@@ -112,8 +131,9 @@ module.exports = function() {
     app.use = function(path, middleware) {
         //
         if ('string' !== typeof(path)) {
+           	console.log("path");
             middleware = path;
-            path = '';
+            path = '/';
         }
         var layer = new Layer(path, middleware);
         this.stack.push(layer);
@@ -155,7 +175,8 @@ module.exports = function() {
     //定义app.all方法
     app.all = function(path,middleware){
     	var route = app.route(path);
-    	route["all"](middleware);
+    	//route["all"](middleware);
+        route.all(middleware);
     	return app;
     }
 
@@ -174,7 +195,15 @@ module.exports = function() {
     app.inject = function(handle){
         var injector = createInjector(handle,app);
         return injector;
-    }
+    };
+
+    app.monkey_patch = function(req,res){
+        req._proto_ = reqDeal;
+        res._proto_ = resDeal;
+        //console.log(req._proto_.isExpress);
+        req.res = res;
+        res.req = req;
+    };
 
     //处理all
 
