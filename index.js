@@ -11,7 +11,6 @@ module.exports = function() {
     //add an app to deal with request
     var app = function(req, res, next) {
         app.monkey_patch(req,res);
-        console.log("app");
         req.app = app;
         app.handle(req, res, next);
     }
@@ -27,68 +26,63 @@ module.exports = function() {
         var old_url = req.url; //记录初次访问路径，以供访问路径在经过subapp时候的修改还原
         var url_modified_status = 0; // url修改标志符 0：未修改；1：已修改
         var restoreApp = null;
-        console.log("handle");
         //获得访问路径			
-        var next = function(err) {
+        var _next = function(err) {
             var middleware_layer = stack[stack_index++];
             //若路径被修改过时，进行还原
             if (url_modified_status) {
                 url_modified_status = 0;
                 req.url = old_url;
             }
-
-            console.log(app.stack);
-            console.log("first is "+restoreApp);
+            
             if(restoreApp){
-                res.app = restoreApp;
+                req.app = restoreApp;
                 restoreApp = null;
             }
-            console.log("two is "+restoreApp);
 
             if (middleware_layer) {
                 var result = middleware_layer.match(req.url);
                 if (result) {
                     req.params = result.params;
                     var middleware = middleware_layer.handle;
-                    console.log("match");
                 } else {
                     req.params = {};
-                    return next(err);
-                    console.log("not  match");
+                    return _next(err);
                 }
                 //含有subapp的情况
                 if (typeof middleware.handle == 'function') {
-                	console.log("subapp");
-                    restoreApp = req.app;
-                    req.app = middleware_layer.handle;
-                    var remote = middleware_layer.path;
+                	req.app.test = 1;
+                   	restoreApp = req.app;  
+
+                   	var remote = middleware_layer.path;
                     //含有subapp时需要对路径进行截取，去除前端路径
                     req.url = req.url.replace(remote, "");
                     if (req.url[0] != '/') {
                         req.url = '/';
                     }
                     url_modified_status = 1;
-                    middleware.handle(req, res, next);
+                    middleware(req, res, _next);
                 } else {
                 	//正常非subapp情况
                     try {
                         //普通middle layer
                         if (err) {
                             if (middleware.length == 4) {
-                                middleware(err, req, res, next);
+                                middleware(err, req, res, _next);
                             } else {
-                                next(err);
+                                _next(err);
                             }
                         } else {
 
                             if (middleware.length < 4) {
-                                middleware(req, res, next);
+
+                                middleware(req, res, _next);
                             } else {
-                                next();
+                                _next();
                             }
                         }
                     } catch(err) {                
-                        next(err);
+                        _next(err);
                     }
 
                 }
@@ -112,14 +106,11 @@ module.exports = function() {
                         res.end();
                     }
                 }
-
                 return;
-
             }
 
         };
-
-        next();
+        _next();
     };
 
     //add listen function to listen port
@@ -131,7 +122,6 @@ module.exports = function() {
     app.use = function(path, middleware) {
         //
         if ('string' !== typeof(path)) {
-           	console.log("path");
             middleware = path;
             path = '/';
         }
@@ -188,7 +178,6 @@ module.exports = function() {
     	}else{
             throw new Error();
         }
-        //console.log(app._factories);
     };
 
 
@@ -198,9 +187,8 @@ module.exports = function() {
     };
 
     app.monkey_patch = function(req,res){
-        req._proto_ = reqDeal;
-        res._proto_ = resDeal;
-        //console.log(req._proto_.isExpress);
+        req.__proto__ = reqDeal;
+        res.__proto__ = resDeal;
         req.res = res;
         res.req = req;
     };

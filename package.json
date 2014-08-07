@@ -14,7 +14,9 @@
   },
   "license": "MIT",
   "dependencies": {
+    "accepts": "^1.0.1",
     "express-di": "^4.0.0",
-    "methods": "^0.1.0"
+    "methods": "^0.1.0",
+    "mime": "^1.2.11"
   }
 }
