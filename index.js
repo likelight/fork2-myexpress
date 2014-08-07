@@ -2,7 +2,7 @@ var http = require("http");
 var Layer = require("./lib/layer.js");
 var makeRoute = require("./lib/route");
 var createInjector = require("./lib/injector");
-var reqDeal = require("./lib/reqest");
+var reqDeal = require("./lib/request");
 var resDeal = require("./lib/response");
 var methods = require("methods");
 
@@ -34,7 +34,7 @@ module.exports = function() {
                 url_modified_status = 0;
                 req.url = old_url;
             }
-            
+
             if(restoreApp){
                 req.app = restoreApp;
                 restoreApp = null;
