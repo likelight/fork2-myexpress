@@ -28,13 +28,13 @@ module.exports = function() {
         var restoreApp = null;
         //获得访问路径			
         var _next = function(err) {
+        	
             var middleware_layer = stack[stack_index++];
             //若路径被修改过时，进行还原
             if (url_modified_status) {
                 url_modified_status = 0;
                 req.url = old_url;
             }
-
             if(restoreApp){
                 req.app = restoreApp;
                 restoreApp = null;
@@ -88,6 +88,7 @@ module.exports = function() {
                 }
 
             } else {
+            	
                 //没有middlerware时直接返回
                 if (err) {
                 	//若是subapp处理逻辑返回parentapp的处理逻辑
@@ -115,8 +116,10 @@ module.exports = function() {
 
     //add listen function to listen port
     app.listen = function(port, done) {
-        var server = http.createServer(app);
-        return server.listen(port, done);
+    	
+        // var server = http.createServer(app);
+        // return server.listen(port, done);
+        return http.createServer(this).listen(port,done);
     };
     // stack is a middleware collections
     app.use = function(path, middleware) {
@@ -155,6 +158,7 @@ module.exports = function() {
 
     //定义各种verb处理函数
     methods.forEach(function(method){
+
     	app[method] = function(path,middleware){
     		var route = app.route(path);
     		route[method](middleware);
